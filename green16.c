@@ -4,7 +4,7 @@
 #include <stdbool.h>
 
 #define PROGRAM_START 0x1 //in case 0 is used for something special
-#define PC registers[0x9] 
+#define PC registers[0xc] 
 
 //registers
 int16_t registers[16];
@@ -17,11 +17,28 @@ int main()
 	//init registers
 	registers[0x0] = 0; //const 0    
 	registers[0x9] = -1; //const -1
+	registers[0xD] = 500; //stack arbitrarily at 500
 	registers[0xc] = PROGRAM_START; //program counter will start at PROGRAM_START
 
 	bool halted = false;
 
-	//TODO: load a program into memory
+	FILE *fp;
+	fp = fopen("program.lst", "r");
+
+	if (fp == NULL){
+		fprintf(stderr, "Error opening input file\n");
+		exit(1); //close and report problem
+	}
+	
+	//memory is read in from the start - must leave first line open
+	//it's a good place to put a title
+	uint16_t mempos = 0;
+	int16_t line;
+	while (fscanf(fp, "%x", &line) != EOF)
+	{
+		memory[mempos] = line;
+		mempos++;
+	}		
 
 	while(!halted)
 	{
@@ -30,7 +47,7 @@ int main()
 		uint8_t opcode = instruction >> 12;
 		uint8_t regX = (instruction & 0x0f00) >> 8;
 		uint8_t regY = (instruction & 0x00f0) >> 4;
-		uint8_t regZ = (instruction & 0x000f);
+		uint8_t regZ = (instruction & 0x000f);   
 
 		uint8_t pcInc = 1;
 		bool niw = regY == 0xf || regZ == 0xf || regX == 0xf; 
@@ -72,11 +89,11 @@ int main()
 			PC+= pcInc;			
 			break;
 		case 0x6 : //ld
-			registers[regX] = memory[(uint16_t)(regY+regZ)];
+			registers[regX] = memory[(uint16_t)(registers[regY]+registers[regZ])];
 			PC+= pcInc;
 			break;
 		case 0x7 : //st
-			memory[(uint16_t)(regY+regZ)] = registers[regX];
+			memory[(uint16_t)(registers[regY]+registers[regZ])] = registers[regX];
 			PC+= pcInc;
 			break; 
 		case 0x8 : //xor
@@ -112,7 +129,9 @@ int main()
 			registers[regX] = registers[regY] <= registers[regZ];
 			PC+= pcInc;
 			break;
-		case 0xf : //esc
+		case 0xf : //esc (print for now)
+			printf("%x\n", memory[(uint16_t)(registers[regY]+registers[regZ])]);
+			PC += pcInc;			
 			break;
 		}
 	}
