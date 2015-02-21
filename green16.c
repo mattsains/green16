@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#define PROGRAM_START 0x1 //in case 0 is used for something special
+#define PROGRAM_START 0x1 //0 used to halt
 #define PC registers[0xc] 
 
 //registers
@@ -17,10 +17,11 @@ int main()
 	//init registers
 	registers[0x0] = 0; //const 0    
 	registers[0x9] = -1; //const -1
-	registers[0xD] = 500; //stack arbitrarily at 500
+	registers[0xD] = 2048; //stack arbitrarily at 2048
+	registers[0xB] = 2048; //stack grows towards higher addresses
 	registers[0xc] = PROGRAM_START; //program counter will start at PROGRAM_START
 
-	bool halted = false;
+	bool running = true;
 
 	FILE *fp;
 	fp = fopen("program.lst", "r");
@@ -33,14 +34,14 @@ int main()
 	//memory is read in from the start - must leave first line open
 	//it's a good place to put a title
 	uint16_t mempos = 0;
-	int16_t line;
-	while (fscanf(fp, "%x", &line) != EOF)
+	char line[200];
+	while (fgets(line, sizeof(line), fp))
 	{
-		memory[mempos] = line;
+		sscanf(line, "%x ",  &memory[mempos]) ;
 		mempos++;
 	}		
 
-	while(!halted)
+	while(running)
 	{
 		uint16_t instruction = memory[PC];
 		
@@ -54,7 +55,6 @@ int main()
 
 		if (niw) 
 		{
-			//a safe assumption while all instruction use X,Y,Z
 			pcInc = 2;			
 			//only need to copy this if it might be used
 			registers[0xF] = memory[PC + 1];			
@@ -112,10 +112,10 @@ int main()
 			if (registers[regX] != 0)
 			{
 				registers[0xB] = PC; //Return address
-				PC = (uint16_t)(regX+regY);				
+				PC = (uint16_t)(registers[regY]+registers[regZ]);				
 			}
 			else
-				PC++; //???
+				PC+= pcInc;
 			break;
 		case 0xc : //lt
 			registers[regX] = registers[regY] < registers[regZ];
@@ -130,10 +130,13 @@ int main()
 			PC+= pcInc;
 			break;
 		case 0xf : //esc (print for now)
-			printf("%x\n", memory[(uint16_t)(registers[regY]+registers[regZ])]);
+			printf("%d\n", memory[(uint16_t)(registers[regY]+registers[regZ])]);
 			PC += pcInc;			
 			break;
 		}
+
+		if (PC == 0)
+			running = false;
 	}
 	
     return 0;
