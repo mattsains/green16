@@ -7,12 +7,12 @@
 #define PC registers[0xc] 
 
 //registers
-int16_t registers[16];
+int16_t registers[16]; //auto-init to all 0
 
 //memory
-int16_t memory[65536];
+int16_t memory[65536]; //auto-init to all 0
 
-int main()
+int main(int argc, char *argv[])
 {
 	//init registers
 	registers[0x0] = 0; //const 0    
@@ -24,7 +24,7 @@ int main()
 	bool running = true;
 
 	FILE *fp;
-	fp = fopen("program.lst", "r");
+	fp = fopen(argv[1], "r");
 
 	if (fp == NULL){
 		fprintf(stderr, "Error opening input file\n");
