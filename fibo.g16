@@ -1,0 +1,31 @@
+0
+sub 5 0 9
+sub 6 0 9
+add 7 0 f
+20
+add 8 0 f
+1024
+st  5 0 8
+sub 8 8 9
+add 7 7 9
+st  5 0 8
+sub 8 8 9
+add 7 7 9
+add 4 5 6
+st  4 0 8
+sub 8 8 9
+add 5 0 6
+add 6 0 4
+add 7 7 9
+bnz 7 f 0
+add 0 0 d
+add 7 0 f
+20
+add 8 0 f
+1024
+esc 0 0 8
+add 7 7 9
+sub 8 8 9
+bnz 7 f 0
+add 0 1 9
+bnz 9 0 0

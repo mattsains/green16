@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <inttypes.h>
 #include <stdbool.h>
+#include <string.h>
 
-FILE *fp;
+FILE *fpr;
+FILE *fpw;
 
 int main(int argc, char *argv[])
 {	
@@ -12,26 +14,46 @@ int main(int argc, char *argv[])
 		return 1; //close and report problem
 	}
 
-	fp = fopen(argv[1], "r");
+	fpr = fopen(argv[1], "r");
+	fpw = fopen(argv[2], "w");
 
-	if (fp == NULL){
+	if (fpr == NULL){
 		fprintf(stderr, "Error opening input file\n");
 		return 1; //close and report problem
 	}
 
-	char commands[16][3] = {"add", "sub", "mul", "div", "shl", "shr", "ld", "st", "xor", "or", "and", "bnz", "lt", "le", "eq", "esc"};
-	char line[200]; //is this init to empty?
+	const char * commands[] = {"add", "sub", "mul", "div", "shl", "shr", "ld", "st", "xor", "or", "and", "bnz", "lt", "le", "eq", "esc"};
+	char line[20] = ""; 
+	char scommand[20] = "";
+	uint8_t icommand = 0;
 	bool isnumber = false;
-	int16_t number;	
-	uint8_t x;
-	uint8_t y;
-	uint8_t z;
-	while (fgets(line, sizeof(line), fp))
+	int number = 0;	
+	int x = 0;
+	int y = 0;
+	int z = 0;
+	while (fgets(line, sizeof(line), fpr))
 	{
-		int a = sscanf(line, "%x ",  &memory[mempos]) ;	
+		isnumber =  sscanf(line, "%d", &number ) ;
+		if (isnumber)
+		{
+		   	fprintf(fpw, "0x%04x\n", number);
+		}
+		else
+		{
+			sscanf(line, "%s%x%x%x" , scommand, &x, &y, &z);
+			int i;
+			for (i = 0; i < 16; i++) {
+				if (strcmp(commands[i], scommand) == 0)
+				{
+					icommand = i;
+					break;					
+				}					
+			}			
+			fprintf(fpw, "0x%x%x%x%x %s", icommand, x, y, z, line);
+		}		
 	}
-
-	fclose(fp);
+	fclose(fpr);
+	fclose(fpw);
     return 0;
 }
 
