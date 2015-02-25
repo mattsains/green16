@@ -39,7 +39,8 @@ int main(int argc, char *argv[])
 	{
 		sscanf(line, "%x ",  &memory[mempos]) ;
 		mempos++;
-	}		
+	}
+	fclose(fp);
 
 	while(running)
 	{
