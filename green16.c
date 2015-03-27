@@ -1,7 +1,6 @@
-#include <stdio.h>
-#include <inttypes.h>
 #include <stdlib.h>
-#include <stdbool.h>
+#include <inttypes.h>
+#include "preproc.h"
 
 #define PROGRAM_START 0x1 //0 used to halt
 #define PC registers[0xc] 
@@ -23,9 +22,31 @@ int main(int argc, char *argv[])
 
 	bool running = true;
 
-	FILE *fp;
-	fp = fopen(argv[1], "r");
-
+	//handle command line args and files
+	FILE *fp;	
+	if (argc < 2)
+	{
+		fprintf(stderr, "Usage:\n  green16 <name.lst>\n");
+		fprintf(stderr, "  green16 -p <name.g16>");
+		return 1; //close and report problem
+	}
+	else if (argc == 2)
+		fp = fopen(argv[1], "r");
+	//not making this smart but put in enough args
+	//and the right flag at the very least
+	else if (argc >= 3) 
+	{
+		if (strcmp(argv[1], "-p") == 0)
+		{
+			char name[100] = "";
+			char dotlst[5] = ".lst";
+			strcat(name, argv[2]);
+			strcat(name, dotlst);
+			preproc(argv[2], name);
+			fp = fopen(name, "r"); 
+		}
+	}
+	
 	if (fp == NULL){
 		fprintf(stderr, "Error opening input file\n");
 		exit(1); //close and report problem
